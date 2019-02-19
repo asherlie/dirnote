@@ -56,7 +56,11 @@ struct fsys* fsys_build(struct fsys* fs, char* fpath){
       if(d){
             while((dir = readdir(d))){
                   stat(dir->d_name, &attr);
+                  #ifdef _DIRENT_HAVE_D_NAMLEN
                   fsys_insert(fs, finf_build(attr.st_mtime, dir->d_fileno, dir->d_name, dir->d_namlen));
+                  #else
+                  fsys_insert(fs, finf_build(attr.st_mtime, dir->d_fileno, dir->d_name, -1));
+                  #endif
             }
             closedir(d);
       }
