@@ -26,7 +26,7 @@ struct finf finf_build(time_t edit_t, ino_t file_no, char* fname, unsigned char 
       struct finf f;
       f.edit_t = edit_t;
       f.file_no = file_no;
-      strncpy(f.fname, fname, namelen);
+      strncpy(f.fname, fname, (namelen > 0) ? namelen : 255);
       return f;
 }
 
@@ -50,7 +50,7 @@ struct fsys* fsys_build(struct fsys* fs, char* fpath){
             m = 1;
             fs = malloc(sizeof(struct fsys));
       }
-      struct stat attr; // attr.st_mtime 
+      struct stat attr;
       DIR* d = opendir(fpath);
       struct dirent* dir;
       if(d){
