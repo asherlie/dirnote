@@ -56,7 +56,6 @@ struct fsys* fsys_build(struct fsys* fs, char* fpath){
       if(d){
             while((dir = readdir(d))){
                   stat(dir->d_name, &attr);
-                  printf("%s\n", dir->d_name);
                   fsys_insert(fs, finf_build(attr.st_mtime, dir->d_fileno, dir->d_name, dir->d_namlen));
             }
             closedir(d);
@@ -82,9 +81,8 @@ struct finf** fsys_cmp(struct fsys* fs0, struct fsys* fs1, int* ret_sz){
                         if(fs0->files[i].edit_t != fs1->files[j].edit_t)add = 1;
                   }
             }
-            if(new_f || add){
+            if(new_f || add)
                   ret[*ret_sz++] = &fs0->files[i];
-            }
       }
       return ret;
 }
@@ -96,6 +94,10 @@ void fsys_merge(struct fsys* fs_dest, struct fsys* fs_src){
 }
 
 int main(int argc, char** argv){
-      (void)argc;
-      (void)argv;
+      if(argc == 1)return 1;
+      struct fsys* fs = fsys_build(NULL, argv[1]);
+      int diff;
+      fsys_cmp(fs, fs, &diff);
+      printf("diff size of %i\n", diff);
+      return 0;
 }
