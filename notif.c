@@ -45,7 +45,11 @@ _Bool fsys_insert(struct fsys* fs, struct finf f){
 
 // if(!fs) a new fsys* is malloc'd
 struct fsys* fsys_build(struct fsys* fs, char* fpath){
-      if(!fs)fs = malloc(sizeof(struct fsys));
+      _Bool m = 0;
+      if(!fs){
+            m = 1;
+            fs = malloc(sizeof(struct fsys));
+      }
       struct stat attr; // attr.st_mtime 
       DIR* d = opendir(fpath);
       struct dirent* dir;
@@ -57,14 +61,32 @@ struct fsys* fsys_build(struct fsys* fs, char* fpath){
             }
             closedir(d);
       }
-      else return NULL;
+      else{
+            if(m)free(fs);
+            return NULL;
+      }
       return fs;
 }
 
-int fsys_cmp(struct fsys* fs0, struct fsys* fs1){
-      (void)fs0;
-      (void)fs1;
-      return 0;
+// returns an finf** with all updated files its size will be the largest of fs0, fs1
+struct finf** fsys_cmp(struct fsys* fs0, struct fsys* fs1, int* ret_sz){
+      struct finf** ret = malloc(sizeof(struct finf*)*((fs0->n > fs1->n) ? fs0->n : fs1->n));
+      *ret_sz = 0;
+      _Bool new_f, add;
+      for(int i = 0; i < fs0->n; ++i){
+            new_f = 1;
+            add = 0;
+            for(int j = 0; j < fs1->n; ++j){
+                  if(fs0->files[i].file_no == fs1->files[j].file_no){
+                        new_f = 0;
+                        if(fs0->files[i].edit_t != fs1->files[j].edit_t)add = 1;
+                  }
+            }
+            if(new_f || add){
+                  ret[*ret_sz++] = &fs0->files[i];
+            }
+      }
+      return ret;
 }
 
 // merges fs_src into fs_dest
@@ -74,5 +96,6 @@ void fsys_merge(struct fsys* fs_dest, struct fsys* fs_src){
 }
 
 int main(int argc, char** argv){
-      return 0;
+      (void)argc;
+      (void)argv;
 }
