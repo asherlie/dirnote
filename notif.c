@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <dirent.h>
 
@@ -31,6 +32,11 @@ struct finf finf_build(time_t edit_t, ino_t file_no, char* fname, unsigned char 
 
 _Bool fsys_insert(struct fsys* fs, struct finf f){
       if(fs->n == fs->cap){
+            fs->cap *= 2;
+            struct finf* tmp_finf = malloc(sizeof(struct finf)*fs->cap);
+            memcpy(tmp_finf, fs->files, sizeof(struct finf)*fs->n);
+            free(fs->files);
+            fs->files = tmp_finf;
       }
       fs->files[fs->n++] = f;
 }
@@ -47,8 +53,8 @@ struct fsys* fsys_build(struct fsys* fs, char* fpath){
             }
             closedir(d);
       }
-      else return NULL:
-      return fs
+      else return NULL;
+      return fs;
 }
 
 int fsys_cmp(struct fsys* fs0, struct fsys* fs1){
