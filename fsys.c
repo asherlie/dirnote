@@ -64,9 +64,22 @@ struct fsys* fsys_build(struct fsys* fs, char* fpath){
       return fs;
 }
 
+struct finf** fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* ret_sz){
+      *ret_sz = 0;
+      /* need to check if:
+       *    fs_new[i] is not in fs_old
+       *    fs_new[i] is in fs_old but has a new edit_t
+       *    fs_old will never have new elements
+       *
+       */
+      for(int i = 0; i < fs_new->n; ++i){
+      }
+      return NULL;
+}
+
 // returns an finf** with all updated files its size will be the largest of fs0, fs1
 // if a file is different in f1 than in f0, changes to f1 are printed
-struct finf** fsys_cmp(struct fsys* fs0, struct fsys* fs1, int* ret_sz){
+struct finf** fsys_cmp_try_2(struct fsys* fs0, struct fsys* fs1, int* ret_sz){
       // large and small
       struct fsys* l = fs0;
       struct fsys* s = fs1;
@@ -92,6 +105,7 @@ struct finf** fsys_cmp(struct fsys* fs0, struct fsys* fs1, int* ret_sz){
 
       struct finf* tmp_fi;
 
+      // this handles file in l, not in s
       _Bool ex, alt;
       for(int i = 0; i < l->n; ++i){
             // to keep track of existence, alteration
