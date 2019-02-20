@@ -148,13 +148,20 @@ void fsys_merge(struct fsys* fs_dest, struct fsys* fs_src){
 void track_changes(struct tc_arg* tca){
       struct fsys* fs_o = fsys_build(NULL, tca->fpath);
       struct fsys* tmp_fs = malloc(sizeof(struct fsys));
+      struct finf** cmp;
       int diff;
       while(usleep(tca->res*1e6) || tca->run){
             diff = 0;
             fsys_build(tmp_fs, tca->fpath);
-            if(fsys_cmp(fs_o, tmp_fs, &diff) && diff > 0){
+            if((cmp = fsys_cmp(fs_o, tmp_fs, &diff)) && diff > 0){
                   // a file has been altered
-                  puts("a file has been altered");
+                  printf("%i files have been altered\n", diff);
+                  puts("those files:");
+                  for(int i = 0; i < diff; ++i){
+                        printf("%s @ %li\n", cmp[i]->fname, cmp[i]->edit_t);
+                        free(cmp[i]);
+                  }
+                  free(cmp);
             }
       }
 }
