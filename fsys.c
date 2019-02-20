@@ -111,8 +111,8 @@ struct finf** fsys_cmp(struct fsys* fs0, struct fsys* fs1, int* ret_sz){
             }
             // if(alt)... add larger time thing, will b saved in some shit
             // umm ... on the stack?...
-            puts("inserting");
-            ret[*ret_sz++] = tmp_fi;
+            printf("inserting %i\n", *ret_sz);
+            ret[(*ret_sz)++] = tmp_fi;
       }
 
       return ret;
@@ -132,7 +132,7 @@ struct finf** fsys_cmp_og(struct fsys* fs0, struct fsys* fs1, int* ret_sz){
                   }
             }
             if(new_f || add)
-                  ret[*ret_sz++] = &fs0->files[i];
+                  ret[(*ret_sz)++] = &fs0->files[i];
       }
       return ret;
 }
