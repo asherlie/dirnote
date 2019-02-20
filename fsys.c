@@ -111,8 +111,10 @@ struct finf** fsys_cmp(struct fsys* fs0, struct fsys* fs1, int* ret_sz){
             }
             // if(alt)... add larger time thing, will b saved in some shit
             // umm ... on the stack?...
-            printf("inserting %i\n", *ret_sz);
-            ret[(*ret_sz)++] = tmp_fi;
+            if(!ex || alt){
+                  printf("inserting %i\n", *ret_sz);
+                  ret[(*ret_sz)++] = tmp_fi;
+            }
       }
 
       return ret;
@@ -138,6 +140,7 @@ struct finf** fsys_cmp_og(struct fsys* fs0, struct fsys* fs1, int* ret_sz){
 }
 
 // merges fs_src into fs_dest
+// obsolete - we will always opt for creating a new struct fsys with fsys_build
 void fsys_merge(struct fsys* fs_dest, struct fsys* fs_src){
       (void)fs_dest;
       (void)fs_src;
@@ -158,10 +161,12 @@ void track_changes(struct tc_arg* tca){
                   printf("%i files have been altered\n", diff);
                   puts("those files:");
                   for(int i = 0; i < diff; ++i){
-                        printf("%s @ %li\n", cmp[i]->fname, cmp[i]->edit_t);
+                        printf("%s @ %li\n", cmp[i]->fname, cmp[i]->file_no);
                         free(cmp[i]);
                   }
                   free(cmp);
+                  // old fs should be updated
+                  fs_o = tmp_fs;
             }
       }
 }
