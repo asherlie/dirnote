@@ -64,7 +64,9 @@ struct fsys* fsys_build(struct fsys* fs, char* fpath){
       return fs;
 }
 
+// returns an finf** with all updated files its size will be the size of fs_new
 struct finf** fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* ret_sz){
+      struct finf** ret =  malloc(sizeof(struct finf*)*fs_new->n);
       *ret_sz = 0;
       /* need to check if:
        *    fs_new[i] is not in fs_old
@@ -72,83 +74,25 @@ struct finf** fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* ret_sz){
        *    fs_old will never have new elements
        *
        */
-      for(int i = 0; i < fs_new->n; ++i){
-      }
-      return NULL;
-}
-
-// returns an finf** with all updated files its size will be the largest of fs0, fs1
-// if a file is different in f1 than in f0, changes to f1 are printed
-struct finf** fsys_cmp_try_2(struct fsys* fs0, struct fsys* fs1, int* ret_sz){
-      // large and small
-      struct fsys* l = fs0;
-      struct fsys* s = fs1;
-
-      if(fs0->n < fs1->n){
-            s = fs0;
-            l = fs1;
-      }
-
-      struct finf** ret =  malloc(sizeof(struct finf*)*l->n);
-      
-      /*
-      for(int i = 0; i < l->n; ++i){
-            for(int j = 0; j < s->n; ++j){
-                  // check if l[i] is in s
-                  // check if s[i] is in l
-                  if()
-            }
-      }
-      */
-
-      *ret_sz = 0;
-
+      _Bool ex, alt;
       struct finf* tmp_fi;
 
-      // this handles file in l, not in s
-      _Bool ex, alt;
-      for(int i = 0; i < l->n; ++i){
-            // to keep track of existence, alteration
-            ex = 0, alt = 0;
-            for(int j = 0; j < s->n; ++j){
-                  // if s contains l->files[i]
-                  if(l->files[i].file_no == s->files[j].file_no){
+      for(int i = 0; i < fs_new->n; ++i){
+            ex = alt = 0;
+            for(int j = 0; j < fs_old->n; ++j){
+                  if(fs_new->files[i].file_no == 
+                     fs_old->files[j].file_no){
                         ex = 1;
-                        // TODO: keep track of larger time, set edit_t to 0
-                        // in smaller so as not to find discrep again
-                        alt = l->files[i].edit_t != s->files[j].edit_t;
-                        // change this to be assigned to larger timeval
-                        tmp_fi = malloc(sizeof(struct finf));
-                        memcpy(tmp_fi, &l->files[i], sizeof(struct finf));
-                        // tmp_fi = l->files[i];
+                        if(fs_new->files[i].edit_t != fs_old->files[j].edit_t)
+                              alt = 1;
+                        break;
                   }
             }
-            // if(alt)... add larger time thing, will b saved in some shit
-            // umm ... on the stack?...
-            if(!ex || alt){
-                  printf("inserting %i\n", *ret_sz);
+            if((ex && alt) || !ex){
+                  tmp_fi = malloc(sizeof(struct finf));
+                  memcpy(tmp_fi, &fs_new->files[i], sizeof(struct finf));
                   ret[(*ret_sz)++] = tmp_fi;
             }
-      }
-
-      return ret;
-}
-
-struct finf** fsys_cmp_og(struct fsys* fs0, struct fsys* fs1, int* ret_sz){
-      struct finf** ret = malloc(sizeof(struct finf*)*((fs0->n > fs1->n) ? fs0->n : fs1->n));
-      *ret_sz = 0;
-      _Bool new_f, add;
-      for(int i = 0; i < fs0->n; ++i){
-            new_f = 1;
-            add = 0;
-            for(int j = 0; j < fs1->n; ++j){
-                  if(fs0->files[i].file_no == fs1->files[j].file_no){
-                        new_f = 0;
-                        if(fs0->files[i].edit_t != fs1->files[j].edit_t)add = 1;
-                  }
-            }
-            if(new_f || add)
-                  ret[(*ret_sz)++] = &fs0->files[i];
       }
       return ret;
 }
