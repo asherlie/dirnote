@@ -110,64 +110,17 @@ struct fsys_cmp_in* build_fci(struct fsys* fs_new, struct fsys* fs_old){
 struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_alt){
       struct fsys_cmp_in* fci = build_fci(fs_new, fs_old);
       *n_alt = 0;
-      for(int i = 0; i < fci->n; ++i)
-            (*n_alt) += fci->fce[i].alt;
+      for(int i = 0; i < fci->n; ++i){
+            if(fci->fce[i].alt || (fci->fce[i].new ^ fci->fce[i].old))
+                  ++(*n_alt);
+      }
       // some light math
-      if(!fci->n){
+      if(!fci->n || !*n_alt){
             free(fci->fce);
             free(fci);
             fci = NULL;
       }
       return fci;
-}
-
-// returns an finf** with all updated files its size will be the size of fs_new
-struct finf** o_fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* ret_sz){
-      struct finf** ret =  malloc(sizeof(struct finf*)*fs_new->n);
-      *ret_sz = 0;
-      /* need to check if:
-       *    fs_new[i] is not in fs_old
-       *    fs_new[i] is in fs_old but has a new edit_t
-       *    fs_old will never have new elements
-       *    fs_old[j] is not in fs_new
-       */
-      _Bool ex, alt;
-      struct finf* tmp_fi;
-      /*int old_ex[fs_old->n];*/
-      /*struct ino_entry old_ex[fs_old->n];*/
-      /*ino_t old_ex[fs_old->n];*/
-      /*for(int i = 0; i < fs_old->n; ++i)old_ex[i] = fs_old*/
-      /*memset(old_ex, 0, sizeof(struct ino_entry)*fs_old->n);*/
-
-
-      for(int i = 0; i < fs_new->n; ++i){
-            // old_ex[] = 1;
-            ex = alt = 0;
-            for(int j = 0; j < fs_old->n; ++j){
-                  /*old_ex[*/
-                  /*old_ex[j] &=;*/
-                  if(fs_new->files[i].file_no == 
-                     fs_old->files[j].file_no){
-                        ex = 1;
-                        if(fs_new->files[i].edit_t != fs_old->files[j].edit_t)
-                              alt = 1;
-                        break;
-                  }
-            }
-            if((ex && alt) || !ex){
-                  tmp_fi = malloc(sizeof(struct finf));
-                  memcpy(tmp_fi, &fs_new->files[i], sizeof(struct finf));
-                  ret[(*ret_sz)++] = tmp_fi;
-            }
-      }
-      return ret;
-}
-
-// merges fs_src into fs_dest
-// obsolete - we will always opt for creating a new struct fsys with fsys_build
-void fsys_merge(struct fsys* fs_dest, struct fsys* fs_src){
-      (void)fs_dest;
-      (void)fs_src;
 }
 
 // resolution is time to sleep between checks in secs
