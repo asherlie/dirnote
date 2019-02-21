@@ -76,10 +76,10 @@ void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age){
       // indexing into fci->fce will be done with this hashing function
       // first check if index has correct info
       int ind;
-      if(fci->fce[(ind = key%fci->n)].key != key){
+      if(fci->fce[(ind = key%fci->cap)].key != key){
             fci->cap *= 2;
             struct fsys_cmp_entry* fce_tmp = calloc(fci->cap, sizeof(struct fsys_cmp_entry));
-            memcpy(fce_tmp, fci->fce, fci->cap*sizeof(struct fsys_cmp_entry));
+            memcpy(fce_tmp, fci->fce, fci->n*sizeof(struct fsys_cmp_entry));
             free(fci->fce);
             fci->fce = fce_tmp;
       }
@@ -102,13 +102,22 @@ struct fsys_cmp_in* build_fci(struct fsys* fs_new, struct fsys* fs_old){
             fce_add_inf(ret, fs_old->files[i].file_no, fs_old->files[i].edit_t, OLD);
       for(int i = 0; i < fs_new->n; ++i)
             fce_add_inf(ret, fs_new->files[i].file_no, fs_new->files[i].edit_t, NEW);
+      return ret;
 }
 
 // returns a malloc'd struct fsys_cmp_in*
 // returns NULL if no change detected
 struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_alt){
       struct fsys_cmp_in* fci = build_fci(fs_new, fs_old);
+      *n_alt = 0;
+      for(int i = 0; i < fci->n; ++i)
+            (*n_alt) += fci->fce[i].alt;
       // some light math
+      if(!fci->n){
+            free(fci->fce);
+            free(fci);
+            fci = NULL;
+      }
       return fci;
 }
 
