@@ -64,22 +64,79 @@ struct fsys* fsys_build(struct fsys* fs, char* fpath){
       return fs;
 }
 
+struct fsys_cmp_in* fci_init(struct fsys_cmp_in* fci){
+      if(!fci)fci = malloc(sizeof(struct fsys_cmp_in));
+      fci->n = 0;
+      fci->cap = 10;
+      fci->fce = calloc(fci->cap, sizeof(struct fsys_cmp_entry));
+      return fci;
+}
+
+void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, int age){
+      // indexing into fci->fce will be done with this hashing function
+      // first check if index has correct info
+      int ind;
+      if(fci->fce[(ind = key%fci->n)].key != key){
+            fci->cap *= 2;
+            struct fsys_cmp_entry* fce_tmp = calloc(fci->cap, sizeof(struct fsys_cmp_entry));
+            memcpy(fce_tmp, fci->fce, fci->cap*sizeof(struct fsys_cmp_entry));
+            free(fci->fce);
+            fci->fce = fce_tmp;
+      }
+      // insert into ind
+      fci->fce[fci->n].key = key;
+      if(age == NEW)fci->fce[fci->n].old = 1;
+      else fci->fce[fci->n].old = 0;
+      ++fci->n;
+}
+
+// returns a malloc'd struct fsys_cmp_in* comparing fs_new and fs_old
+struct fsys_cmp_in* build_fci(struct fsys* fs_new, struct fsys* fs_old){
+      struct fsys_cmp_in* ret = malloc(sizeof(struct fsys_cmp_in));
+      fci_init(ret);
+      // old entries must be added first
+      for(int i = 0; i < fs_old->n; ++i)
+            fce_add_inf(ret, fs_old->files[i].file_no, OLD);
+      for(int i = 0; i < fs_new->n; ++i)
+            fce_add_inf(ret, fs_new->files[i].file_no, NEW);
+}
+
+// returns a malloc'd struct fsys_cmp_in*
+// returns NULL if no change detected
+struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_alt){
+      struct fsys_cmp_in* fci = build_fci(fs_new, fs_old);
+      for(int i = 0; i < fci->n; ++i){
+            if()
+      }
+      // some light math
+      return fci;
+}
+
 // returns an finf** with all updated files its size will be the size of fs_new
-struct finf** fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* ret_sz){
+struct finf** o_fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* ret_sz){
       struct finf** ret =  malloc(sizeof(struct finf*)*fs_new->n);
       *ret_sz = 0;
       /* need to check if:
        *    fs_new[i] is not in fs_old
        *    fs_new[i] is in fs_old but has a new edit_t
        *    fs_old will never have new elements
-       *
+       *    fs_old[j] is not in fs_new
        */
       _Bool ex, alt;
       struct finf* tmp_fi;
+      /*int old_ex[fs_old->n];*/
+      /*struct ino_entry old_ex[fs_old->n];*/
+      /*ino_t old_ex[fs_old->n];*/
+      /*for(int i = 0; i < fs_old->n; ++i)old_ex[i] = fs_old*/
+      /*memset(old_ex, 0, sizeof(struct ino_entry)*fs_old->n);*/
+
 
       for(int i = 0; i < fs_new->n; ++i){
+            // old_ex[] = 1;
             ex = alt = 0;
             for(int j = 0; j < fs_old->n; ++j){
+                  /*old_ex[*/
+                  /*old_ex[j] &=;*/
                   if(fs_new->files[i].file_no == 
                      fs_old->files[j].file_no){
                         ex = 1;
@@ -109,7 +166,8 @@ void fsys_merge(struct fsys* fs_dest, struct fsys* fs_src){
 void track_changes(struct tc_arg* tca){
       struct fsys* fs_o = fsys_build(NULL, tca->fpath);
       struct fsys* tmp_fs = malloc(sizeof(struct fsys));
-      struct finf** cmp;
+      /*struct finf** cmp;*/
+      struct fsys_cmp_in* cmp;
       int diff;
       while(usleep(tca->res*1e6) || tca->run){
             diff = 0;
@@ -118,10 +176,12 @@ void track_changes(struct tc_arg* tca){
                   // a file has been altered
                   printf("%i files have been altered\n", diff);
                   puts("those files:");
-                  for(int i = 0; i < diff; ++i){
-                        printf("%s @ %li\n", cmp[i]->fname, cmp[i]->file_no);
-                        free(cmp[i]);
-                  }
+                  /*
+                   *for(int i = 0; i < diff; ++i){
+                   *      printf("%s @ %li\n", cmp[i]->fname, cmp[i]->file_no);
+                   *      free(cmp[i]);
+                   *}
+                   */
                   free(cmp);
                   // old fs should be updated
                   fs_o = tmp_fs;

@@ -15,7 +15,7 @@ int main(int argc, char** argv){
       while(getchar() != '\n');
       struct fsys* fs0 = fsys_build(NULL, argv[1]);
       int diff;
-      fsys_cmp(fs0, fs, &diff);
+      // fsys_cmp(fs0, fs, &diff);
       printf("diff size of %i\n", diff);
       return 0;
 }
