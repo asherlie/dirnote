@@ -5,8 +5,7 @@
 #define NEW 1
 
 struct finf{
-      char fname[255];
-      unsigned char namelen;
+      char fname[NAME_MAX];
       time_t edit_t;
       ino_t file_no;
 };

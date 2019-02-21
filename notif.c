@@ -8,6 +8,5 @@ int main(int argc, char** argv){
       tca.res = 1;
       tca.fpath = argv[1];
       track_changes(&tca);
-
       return 0;
 }

@@ -14,11 +14,11 @@ void fsys_init(struct fsys* fs){
       fs->files = malloc(sizeof(struct finf)*fs->cap);
 }
 
-struct finf finf_build(time_t edit_t, ino_t file_no, char* fname, unsigned char namelen){
+struct finf finf_build(time_t edit_t, ino_t file_no, char* fname){
       struct finf f;
       f.edit_t = edit_t;
       f.file_no = file_no;
-      strncpy(f.fname, fname, (namelen > 0) ? namelen : 255);
+      strcpy(f.fname, fname);
       return f;
 }
 
@@ -49,11 +49,7 @@ struct fsys* fsys_build(struct fsys* fs, char* fpath){
       if(d){
             while((dir = readdir(d))){
                   stat(dir->d_name, &attr);
-                  #ifdef _DIRENT_HAVE_D_NAMLEN
-                  fsys_insert(fs, finf_build(attr.st_mtime, dir->d_fileno, dir->d_name, dir->d_namlen));
-                  #else
-                  fsys_insert(fs, finf_build(attr.st_mtime, dir->d_fileno, dir->d_name, -1));
-                  #endif
+                  fsys_insert(fs, finf_build(attr.st_mtime, dir->d_fileno, dir->d_name));
             }
             closedir(d);
       }
@@ -114,7 +110,6 @@ struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_al
             if(fci->fce[i].alt || (fci->fce[i].new ^ fci->fce[i].old))
                   ++(*n_alt);
       }
-      // some light math
       if(!fci->n || !*n_alt){
             free(fci->fce);
             free(fci);
@@ -128,22 +123,14 @@ struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_al
 void track_changes(struct tc_arg* tca){
       struct fsys* fs_o = fsys_build(NULL, tca->fpath);
       struct fsys* tmp_fs = malloc(sizeof(struct fsys));
-      /*struct finf** cmp;*/
+
       struct fsys_cmp_in* cmp;
       int diff;
-      while(usleep(tca->res*1e6) || tca->run){
+      while(usleep(tca->res*1e6) != -1 && tca->run){
             diff = 0;
             fsys_build(tmp_fs, tca->fpath);
-            if((cmp = fsys_cmp(fs_o, tmp_fs, &diff)) && diff > 0){
-                  // a file has been altered
+            if((cmp = fsys_cmp(fs_o, tmp_fs, &diff))){
                   printf("%i files have been altered\n", diff);
-                  puts("those files:");
-                  /*
-                   *for(int i = 0; i < diff; ++i){
-                   *      printf("%s @ %li\n", cmp[i]->fname, cmp[i]->file_no);
-                   *      free(cmp[i]);
-                   *}
-                   */
                   free(cmp);
                   // old fs should be updated
                   fs_o = tmp_fs;
