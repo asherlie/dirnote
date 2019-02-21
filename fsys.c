@@ -72,7 +72,7 @@ struct fsys_cmp_in* fci_init(struct fsys_cmp_in* fci){
       return fci;
 }
 
-void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, int age){
+void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age){
       // indexing into fci->fce will be done with this hashing function
       // first check if index has correct info
       int ind;
@@ -84,9 +84,12 @@ void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, int age){
             fci->fce = fce_tmp;
       }
       // insert into ind
-      fci->fce[fci->n].key = key;
-      if(age == NEW)fci->fce[fci->n].old = 1;
-      else fci->fce[fci->n].old = 0;
+      fci->fce[ind].edit_t[age] = edit_t;
+      fci->fce[ind].key = key;
+      if(age == NEW)fci->fce[ind].old = 1;
+      else fci->fce[ind].new = 1;
+      if(fci->fce[ind].old && fci->fce[ind].new && fci->fce[ind].edit_t[0] != fci->fce[ind].edit_t[1])
+            fci->fce[ind].alt = 1;
       ++fci->n;
 }
 
@@ -96,18 +99,15 @@ struct fsys_cmp_in* build_fci(struct fsys* fs_new, struct fsys* fs_old){
       fci_init(ret);
       // old entries must be added first
       for(int i = 0; i < fs_old->n; ++i)
-            fce_add_inf(ret, fs_old->files[i].file_no, OLD);
+            fce_add_inf(ret, fs_old->files[i].file_no, fs_old->files[i].edit_t, OLD);
       for(int i = 0; i < fs_new->n; ++i)
-            fce_add_inf(ret, fs_new->files[i].file_no, NEW);
+            fce_add_inf(ret, fs_new->files[i].file_no, fs_new->files[i].edit_t, NEW);
 }
 
 // returns a malloc'd struct fsys_cmp_in*
 // returns NULL if no change detected
 struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_alt){
       struct fsys_cmp_in* fci = build_fci(fs_new, fs_old);
-      for(int i = 0; i < fci->n; ++i){
-            if()
-      }
       // some light math
       return fci;
 }

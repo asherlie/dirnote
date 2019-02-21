@@ -27,6 +27,8 @@ struct tc_arg{
 
 struct fsys_cmp_entry{
       ino_t key;
+      // old, new
+      time_t edit_t[2];
       // if this file exists in old, new
       _Bool old, new, alt;
 };
@@ -40,7 +42,7 @@ struct fsys_cmp_in* fci_init(struct fsys_cmp_in* fci);
 
 // age can be passed OLD or NEW
 // age is recorded as having file key once this is called
-void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, int age);
+void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age);
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
