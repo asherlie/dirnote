@@ -4,6 +4,10 @@
 #define OLD 0
 #define NEW 1
 
+#ifndef NAME_MAX
+#define NAME_MAX 255
+#endif
+
 struct finf{
       char fname[NAME_MAX];
       time_t edit_t;
