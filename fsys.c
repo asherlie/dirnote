@@ -72,13 +72,21 @@ void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age){
       // indexing into fci->fce will be done with this hashing function
       // first check if index has correct info
       int ind;
-      if(fci->fce[(ind = key%fci->cap)].key != key){
+      // TODO: should hashing functoin use cap or n
+      // if(fci->fce[(ind = key%fci->cap)].key != key){
+      // if(fci->fce[(ind = key%fci->n)].key != key){
+      // finding supposed index of hash map
+      // if it doesn't contain our key, a new entry is required
+      // index will be recalculated with n+1
+      // underlying arr will be resized if necessary
+      if(fci->fce[(ind = (fci->n) ? key%fci->n : 0)].key != key && ){
             fci->cap *= 2;
             struct fsys_cmp_entry* fce_tmp = calloc(fci->cap, sizeof(struct fsys_cmp_entry));
             memcpy(fce_tmp, fci->fce, fci->n*sizeof(struct fsys_cmp_entry));
             free(fci->fce);
             fci->fce = fce_tmp;
       }
+      // if we haven't found 
       // insert into ind
       fci->fce[ind].edit_t[age] = edit_t;
       fci->fce[ind].key = key;
