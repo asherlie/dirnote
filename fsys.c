@@ -65,6 +65,10 @@ struct fsys_cmp_in* fci_init(struct fsys_cmp_in* fci){
       fci->n = 0;
       fci->cap = 10;
       fci->fce = calloc(fci->cap, sizeof(struct fsys_cmp_entry));
+      fci->indices.first = malloc(sizeof(struct f_ind));
+      fci->indices.last = fci->indices.first;
+      fci->indices.last->next = fci->indices.last;
+      fci->indices.first->ind = -1;
       return fci;
 }
 
@@ -75,16 +79,30 @@ void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age){
       // TODO: should hashing functoin use cap or n
       // if(fci->fce[(ind = key%fci->cap)].key != key){
       // if(fci->fce[(ind = key%fci->n)].key != key){
+
       // finding supposed index of hash map
       // if it doesn't contain our key, a new entry is required
       // index will be recalculated with n+1
       // underlying arr will be resized if necessary
-      if(fci->fce[(ind = (fci->n) ? key%fci->n : 0)].key != key && ){
-            fci->cap *= 2;
-            struct fsys_cmp_entry* fce_tmp = calloc(fci->cap, sizeof(struct fsys_cmp_entry));
-            memcpy(fce_tmp, fci->fce, fci->n*sizeof(struct fsys_cmp_entry));
-            free(fci->fce);
-            fci->fce = fce_tmp;
+      /*if(fci->fce[(ind = (fci->n) ? key%fci->n : 0)].key != key && ){*/
+      if(fci->fce[(ind = (fci->n) ? key%fci->n : 0)].key != key){
+            ind = key%(fci->n+1);
+            /*if(fci->n == fci->cap){*/
+            if(ind >= fci->cap){
+                  fci->cap *= 2;
+                  printf("fci->cap resized to %i\n", fci->cap);
+                  struct fsys_cmp_entry* fce_tmp = calloc(fci->cap, sizeof(struct fsys_cmp_entry));
+                  memcpy(fce_tmp, fci->fce, fci->n*sizeof(struct fsys_cmp_entry));
+                  free(fci->fce);
+                  fci->fce = fce_tmp;
+            }
+            // we will always assume that there is a malloc'd node available
+            // at last->next
+            // on first insertion, last->next will point to last/first
+            fci->indices.last->next->ind = ind;
+            fci->indices.last = fci->indices.last->next;
+            fci->indices.last->next = malloc(sizeof(struct f_ind));
+            fci->indices.last->next->ind = -1;
       }
       // if we haven't found 
       // insert into ind

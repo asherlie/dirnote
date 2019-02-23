@@ -36,7 +36,18 @@ struct fsys_cmp_entry{
       _Bool old, new, alt;
 };
 
+struct f_ind{
+      int ind;
+      struct f_ind* next;
+};
+
+struct f_indices{
+      struct f_ind* first;
+      struct f_ind* last;
+};
+
 struct fsys_cmp_in{
+      struct f_indices indices;
       struct fsys_cmp_entry* fce;
       int n, cap;
 };
