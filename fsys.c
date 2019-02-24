@@ -96,18 +96,8 @@ void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age){
                   free(fci->fce);
                   fci->fce = fce_tmp;
             }
-            // on first insertion, last->next will point to last/first
-            /*
-             *fci->indices.last->next->ind = ind;
-             *fci->indices.last = fci->indices.last->next;
-             *fci->indices.last->next = malloc(sizeof(struct f_ind));
-             *fci->indices.last->next->ind = -1;
-             */
-
-            // this will only occur on first insert
-            if(fci->indices.first == fci->indices.last){
+            if(fci->indices.first == fci->indices.last)
                   fci->indices.first->ind = ind;
-            }
             else{
                   fci->indices.last->next = malloc(sizeof(struct f_ind));
                   fci->indices.last->next->ind = ind;
@@ -143,15 +133,12 @@ struct fsys_cmp_in* build_fci(struct fsys* fs_new, struct fsys* fs_old){
 struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_alt){
       struct fsys_cmp_in* fci = build_fci(fs_new, fs_old);
       *n_alt = 0;
-      /*
-       *for(int i = 0; i < fci->n; ++i){
-       *      if(fci->fce[i].alt || (fci->fce[i].new ^ fci->fce[i].old))
-       *            ++(*n_alt);
-       *}
-       */
       for(struct f_ind* ind = fci->indices.first; ind; ind = ind->next){
-            if(fci->fce[ind->ind].alt || (fci->fce[ind->ind].new ^ fci->fce[ind->ind].old))
+            if(fci->fce[ind->ind].alt || (fci->fce[ind->ind].new ^ fci->fce[ind->ind].old)){
+                  printf("%li != %li\n", fci->fce[ind->ind].edit_t[0], fci->fce[ind->ind].edit_t[1]);
+                  printf("[%i] != [%i]\n", ind->ind, ind->ind);
                   ++(*n_alt);
+            }
       }
       if(!fci->n || !*n_alt){
             free(fci->fce);
