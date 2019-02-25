@@ -53,6 +53,7 @@ struct fsys_cmp_in{
       int n, cap;
 
       // hashed `ino_t`s point to linked lists of cmp_entries
+      // bucket_ind stores all the populated bucket indices
       int bux, * bucket_ind;
       struct fsys_cmp_entry* cmp_entries;
 };
