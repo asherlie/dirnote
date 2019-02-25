@@ -63,13 +63,6 @@ struct fsys* fsys_build(struct fsys* fs, char* fpath){
 struct fsys_cmp_in* fci_init(struct fsys_cmp_in* fci){
       if(!fci)fci = malloc(sizeof(struct fsys_cmp_in));
       fci->n = 0;
-      fci->cap = 10;
-      fci->fce = calloc(fci->cap, sizeof(struct fsys_cmp_entry));
-      fci->indices.first = malloc(sizeof(struct f_ind));
-      fci->indices.last = fci->indices.first;
-      // fci->indices.last->next = fci->indices.last;
-      fci->indices.first->ind = -1;
-
       fci->bux = 100;
       // TODO: free this
       fci->bucket_ind = malloc((fci->bux+1)*sizeof(int));
@@ -101,7 +94,7 @@ void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age){
             fce = fci->cmp_entries[i].first;
       }
       else{
-            for(fce = &fci->cmp_entries[i]; fce; fce = fce->next){
+            for(fce = fci->cmp_entries[i].first; fce; fce = fce->next){
                   if(fce->key == key)break;
             }
             // if file not found
@@ -119,12 +112,12 @@ void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age){
             }
       }
       
+      fce->next = NULL;
       fce->key = key;
       fce->edit_t[age] = edit_t;
       if(age == NEW)fce->old = 1;
       else fce->new = 1;
-      if(fce->old && fce->new && fce->edit_t[0] != fce->edit_t[1])
-            fce->alt = 1;
+      fce->alt = fce->old ^ fce->new || (fce->old && fce->new && fce->edit_t[0] != fce->edit_t[1]);
       ++fci->n;
 
       return;
@@ -149,26 +142,17 @@ struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_al
       *n_alt = 0;
 
       for(int i = 0; fci->bucket_ind[i] != -1; ++i){
-            for(struct fsys_cmp_entry* fce = &fci->cmp_entries[fci->bucket_ind[i]];
+            for(struct fsys_cmp_entry* fce = fci->cmp_entries[fci->bucket_ind[i]].first;
                 fce; fce = fce->next){
-                  printf("key: %li, edit_t: [%li, %li]\n", fce->key, fce->edit_t[0], fce->edit_t[1]);
-                  if(fce->alt || fce->new ^ fce->old){
+                  if(fce->alt){
                         puts("alteration found!");
                         ++(*n_alt);
                   }
             }
       }
-      
-      /*
-       *for(struct fsys_cmp_entry* fce = fci->cmp_entries; fce; fce = fce->next){
-       *      if(fce->alt || fce->new ^ fce->old){
-       *            printf("alteration found!\n");
-       *            ++(*n_alt);
-       *      }
-       *}
-       */
+
       if(!fci->n || !*n_alt){
-            free(fci->fce);
+            free(fci->cmp_entries);
             free(fci);
             fci = NULL;
       }

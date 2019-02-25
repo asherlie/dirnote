@@ -48,8 +48,6 @@ struct f_indices{
 };
 
 struct fsys_cmp_in{
-      struct f_indices indices;
-      struct fsys_cmp_entry* fce;
       int n, cap;
 
       // hashed `ino_t`s point to linked lists of cmp_entries
