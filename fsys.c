@@ -111,11 +111,6 @@ void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age){
             }
             // if file not found
             if(!fce){
-                  puts("fce == NULL");
-                  printf("fci: %p\n", (void*)fci);
-                  printf("cmp_entr: %p\n", (void*)fci->cmp_entries);
-                  printf("cmp_entr[%i]: %p\n", i, (void*)&fci->cmp_entries[i]);
-                  printf("last: %p\n", (void*)fci->cmp_entries[i].last);
                   if(!fci->cmp_entries[i].first){
                         fci->cmp_entries[i].first = malloc(sizeof(struct fsys_cmp_entry));
                         fci->cmp_entries[i].last = fci->cmp_entries[i].first;
@@ -130,8 +125,6 @@ void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age){
             }
       }
 
-      printf("inserting into edit_t[%i]\n", age);
-      printf("edit_t: %li\n", fce->edit_t[0]);
       fce->edit_t[age] = edit_t;
       if(age == NEW)fce->old = 1;
       else fce->new = 1;
