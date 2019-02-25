@@ -71,6 +71,10 @@ struct fsys_cmp_in* fci_init(struct fsys_cmp_in* fci){
       fci->indices.first->ind = -1;
 
       fci->bux = 100;
+      // TODO: free this
+      fci->bucket_ind = malloc(fci->bux*sizeof(int));
+      // TODO: is this UB? man memset says `c` should be a byte
+      memset(fci->bucket_ind, -1, sizeof(int)*fci->bux);
       fci->cmp_entries = calloc(sizeof(struct fsys_cmp_entry), fci->bux);
       for(int i = 0; i < fci->bux; ++i){
             fci->cmp_entries[i].next = fci->cmp_entries[i].first =
@@ -133,7 +137,7 @@ void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age){
       ++fci->n;
 
       return;
-
+      /**********************UNREACHED CODE*********************/
       // indexing into fci->fce will be done with this hashing function
       // first check if index has correct info
       int ind;

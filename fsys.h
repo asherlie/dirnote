@@ -34,9 +34,7 @@ struct fsys_cmp_entry{
       time_t edit_t[2];
       // if this file exists in old, new
       _Bool old, new, alt;
-      struct fsys_cmp_entry* first;
-      struct fsys_cmp_entry* last;
-      struct fsys_cmp_entry* next;
+      struct fsys_cmp_entry* first, * last, * next;
 };
 
 struct f_ind{
@@ -55,7 +53,7 @@ struct fsys_cmp_in{
       int n, cap;
 
       // hashed `ino_t`s point to linked lists of cmp_entries
-      int bux;
+      int bux, * bucket_ind;
       struct fsys_cmp_entry* cmp_entries;
 };
 
