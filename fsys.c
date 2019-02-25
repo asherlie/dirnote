@@ -162,14 +162,15 @@ struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_al
 
 // resolution is time to sleep between checks in usecs
 // this is meant to be called from pthread_create()
-void track_changes(struct tc_arg* tca){
+void* track_changes_pth(void* tca_v){
+      struct tc_arg* tca = (struct tc_arg*)tca_v;
       struct fsys* fs_o = malloc(sizeof(struct fsys));
       struct fsys* tmp_fs = malloc(sizeof(struct fsys));
 
       struct fsys_cmp_in* cmp;
       int diff;
 
-      while(tca->run){
+      while(*tca->run){
             fsys_build(fs_o, tca->fpath);
             usleep(tca->res);
             fsys_build(tmp_fs, tca->fpath);
@@ -181,4 +182,26 @@ void track_changes(struct tc_arg* tca){
             // fsys_free(fs_o);
             // fsys_free(tmp_fs);
       }
+      return NULL;
+}
+
+struct track_chng track_changes(char* fpath, int res){
+      struct tc_arg tca;
+      tca.run = malloc(sizeof(int));
+      *tca.run = 0;
+      tca.res = res;
+      tca.fpath = fpath;
+      pthread_t pt = -1;
+
+      struct track_chng tc;
+      tc.run = tca.run;
+      tc.pth = pt;
+
+      pthread_create(&pt, NULL, &track_changes_pth, &tca);
+      return tc;
+}
+
+void untrack_changes(struct track_chng tc){
+      *tc.run = 0;
+      pthread_join(tc.pth, NULL);
 }

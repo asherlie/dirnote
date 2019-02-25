@@ -1,5 +1,6 @@
 #include <sys/stat.h>
 #include <dirent.h>
+#include <pthread.h>
 
 #define OLD 0
 #define NEW 1
@@ -7,6 +8,11 @@
 #ifndef NAME_MAX
 #define NAME_MAX 255
 #endif
+
+struct track_chng{
+      _Bool* run;
+      pthread_t pth;
+};
 
 struct finf{
       char fname[NAME_MAX];
@@ -25,7 +31,7 @@ struct tc_arg{
       char* fpath;
       int res;
       // once run == 0, tc will safely exit
-      _Bool run;
+      _Bool* run;
 };
 
 struct fsys_cmp_entry{
@@ -73,4 +79,6 @@ struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_al
 void fsys_merge(struct fsys* fs_dest, struct fsys* fs_src);
 
 /* track_changes should not be called without pthread_create */
-void track_changes(struct tc_arg* tca);
+// returns a pointer to _Bool run in tc_arg
+struct track_chng track_changes(char* fpath, int res);
+void untrack_changes(struct track_chng tc);
