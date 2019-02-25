@@ -69,10 +69,78 @@ struct fsys_cmp_in* fci_init(struct fsys_cmp_in* fci){
       fci->indices.last = fci->indices.first;
       // fci->indices.last->next = fci->indices.last;
       fci->indices.first->ind = -1;
+
+      fci->bux = 100;
+      fci->cmp_entries = calloc(sizeof(struct fsys_cmp_entry), fci->bux);
+      for(int i = 0; i < fci->bux; ++i){
+            fci->cmp_entries[i].next = fci->cmp_entries[i].first =
+            fci->cmp_entries[i].last = NULL;
+            memset(fci->cmp_entries[i].edit_t, 0, sizeof(time_t)*2);
+      }
+
       return fci;
 }
 
+void resize_fci(struct fsys_cmp_in* fci, int factor){
+      (void)fci;
+      (void)factor;
+}
+
 void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age){
+
+/*
+      fci->fce[ind].edit_t[age] = edit_t;
+      fci->fce[ind].key = key;
+      if(age == NEW)fci->fce[ind].old = 1;
+      else fci->fce[ind].new = 1;
+      if(fci->fce[ind].old && fci->fce[ind].new && fci->fce[ind].edit_t[0] != fci->fce[ind].edit_t[1])
+            fci->fce[ind].alt = 1;
+      ++fci->n;
+*/
+
+      int i = key%fci->bux;
+      struct fsys_cmp_entry* fce = NULL;
+      // if first entry in bucket
+      if(!fci->cmp_entries[i].first && fci->cmp_entries[i].last && !fci->cmp_entries[i].next){
+            fci->cmp_entries[i].first = malloc(sizeof(struct fsys_cmp_entry));
+            fci->cmp_entries[i].last = fci->cmp_entries[i].first;
+      }
+      else{
+            for(fce = &fci->cmp_entries[i]; fce; fce = fce->next){
+                  if(fce->key == key)break;
+            }
+            // if file not found
+            if(!fce){
+                  puts("fce == NULL");
+                  printf("fci: %p\n", (void*)fci);
+                  printf("cmp_entr: %p\n", (void*)fci->cmp_entries);
+                  printf("cmp_entr[%i]: %p\n", i, (void*)&fci->cmp_entries[i]);
+                  printf("last: %p\n", (void*)fci->cmp_entries[i].last);
+                  if(!fci->cmp_entries[i].first){
+                        fci->cmp_entries[i].first = malloc(sizeof(struct fsys_cmp_entry));
+                        fci->cmp_entries[i].last = fci->cmp_entries[i].first;
+                        fce = fci->cmp_entries[i].first;
+                  }
+                  else{
+                        fci->cmp_entries[i].last->next = malloc(sizeof(struct fsys_cmp_entry));
+                        fci->cmp_entries[i].last = fci->cmp_entries[i].last->next;
+                        fci->cmp_entries[i].last->key = key;
+                        fce = fci->cmp_entries[i].last;
+                  }
+            }
+      }
+
+      printf("inserting into edit_t[%i]\n", age);
+      printf("edit_t: %li\n", fce->edit_t[0]);
+      fce->edit_t[age] = edit_t;
+      if(age == NEW)fce->old = 1;
+      else fce->new = 1;
+      if(fce->old && fce->new && fce->edit_t[0] != fce->edit_t[1])
+            fce->alt = 1;
+      ++fci->n;
+
+      return;
+
       // indexing into fci->fce will be done with this hashing function
       // first check if index has correct info
       int ind;
@@ -133,10 +201,10 @@ struct fsys_cmp_in* build_fci(struct fsys* fs_new, struct fsys* fs_old){
 struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_alt){
       struct fsys_cmp_in* fci = build_fci(fs_new, fs_old);
       *n_alt = 0;
-      for(struct f_ind* ind = fci->indices.first; ind; ind = ind->next){
-            if(fci->fce[ind->ind].alt || (fci->fce[ind->ind].new ^ fci->fce[ind->ind].old)){
-                  printf("%li != %li\n", fci->fce[ind->ind].edit_t[0], fci->fce[ind->ind].edit_t[1]);
-                  printf("[%i] != [%i]\n", ind->ind, ind->ind);
+
+      for(struct fsys_cmp_entry* fce = fci->cmp_entries; fce; fce = fce->next){
+            if(fce->alt || fce->new ^ fce->old){
+                  printf("alteration found!\n");
                   ++(*n_alt);
             }
       }

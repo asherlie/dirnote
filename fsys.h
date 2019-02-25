@@ -34,6 +34,9 @@ struct fsys_cmp_entry{
       time_t edit_t[2];
       // if this file exists in old, new
       _Bool old, new, alt;
+      struct fsys_cmp_entry* first;
+      struct fsys_cmp_entry* last;
+      struct fsys_cmp_entry* next;
 };
 
 struct f_ind{
@@ -50,11 +53,16 @@ struct fsys_cmp_in{
       struct f_indices indices;
       struct fsys_cmp_entry* fce;
       int n, cap;
+
+      // hashed `ino_t`s point to linked lists of cmp_entries
+      int bux;
+      struct fsys_cmp_entry* cmp_entries;
 };
 
 struct fsys_cmp_in* fci_init(struct fsys_cmp_in* fci);
 
 // age can be passed OLD or NEW
+//
 // age is recorded as having file key once this is called
 void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age);
 
