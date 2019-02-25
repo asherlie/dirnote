@@ -117,7 +117,7 @@ void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age){
       fce->edit_t[age] = edit_t;
       if(age == NEW)fce->old = 1;
       else fce->new = 1;
-      fce->alt = fce->old ^ fce->new || (fce->old && fce->new && fce->edit_t[0] != fce->edit_t[1]);
+      fce->alt = (fce->old ^ fce->new) || (fce->old && fce->new && fce->edit_t[0] != fce->edit_t[1]);
       ++fci->n;
 
       return;
@@ -151,6 +151,7 @@ struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_al
             }
       }
 
+      // TODO: fci->n is twice what it should be
       if(!fci->n || !*n_alt){
             free(fci->cmp_entries);
             free(fci);
@@ -159,22 +160,25 @@ struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_al
       return fci;
 }
 
-// resolution is time to sleep between checks in secs
+// resolution is time to sleep between checks in usecs
 // this is meant to be called from pthread_create()
 void track_changes(struct tc_arg* tca){
-      struct fsys* fs_o = fsys_build(NULL, tca->fpath);
+      struct fsys* fs_o = malloc(sizeof(struct fsys));
       struct fsys* tmp_fs = malloc(sizeof(struct fsys));
 
       struct fsys_cmp_in* cmp;
       int diff;
-      while(usleep(tca->res*1e6) != -1 && tca->run){
-            diff = 0;
+
+      while(tca->run){
+            fsys_build(fs_o, tca->fpath);
+            usleep(tca->res);
             fsys_build(tmp_fs, tca->fpath);
+
             if((cmp = fsys_cmp(fs_o, tmp_fs, &diff))){
                   printf("%i files have been altered\n", diff);
-                  free(cmp);
-                  // old fs should be updated
-                  fs_o = tmp_fs;
+                  // fsys_cmp_free(cmp);
             }
+            // fsys_free(fs_o);
+            // fsys_free(tmp_fs);
       }
 }
