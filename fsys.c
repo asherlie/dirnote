@@ -195,9 +195,9 @@ struct track_chng track_changes(char* fpath, int res){
 
       struct track_chng tc;
       tc.run = tca.run;
-      tc.pth = pt;
 
       pthread_create(&pt, NULL, &track_changes_pth, &tca);
+      tc.pth = pt;
       return tc;
 }
 
