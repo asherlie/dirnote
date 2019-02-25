@@ -9,11 +9,6 @@
 #define NAME_MAX 255
 #endif
 
-struct track_chng{
-      _Bool* run;
-      pthread_t pth;
-};
-
 struct finf{
       char fname[NAME_MAX];
       time_t edit_t;
@@ -32,6 +27,14 @@ struct tc_arg{
       int res;
       // once run == 0, tc will safely exit
       _Bool* run;
+};
+
+// TODO: this struct is obsolete
+struct track_chng{
+      _Bool* run;
+      pthread_t pth;
+
+      struct tc_arg* tca;
 };
 
 struct fsys_cmp_entry{
@@ -80,5 +83,6 @@ void fsys_merge(struct fsys* fs_dest, struct fsys* fs_src);
 
 /* track_changes should not be called without pthread_create */
 // returns a pointer to _Bool run in tc_arg
+// struct track_chng track_changes(char* fpath, int res);
 struct track_chng track_changes(char* fpath, int res);
 void untrack_changes(struct track_chng tc);

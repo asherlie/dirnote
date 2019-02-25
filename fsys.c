@@ -37,6 +37,7 @@ _Bool fsys_insert(struct fsys* fs, struct finf f){
 
 // if(!fs) a new fsys* is malloc'd
 struct fsys* fsys_build(struct fsys* fs, char* fpath){
+      if(!fpath)return NULL;
       _Bool m = 0;
       if(!fs){
             m = 1;
@@ -186,22 +187,25 @@ void* track_changes_pth(void* tca_v){
 }
 
 struct track_chng track_changes(char* fpath, int res){
-      struct tc_arg tca;
-      tca.run = malloc(sizeof(int));
-      *tca.run = 0;
-      tca.res = res;
-      tca.fpath = fpath;
-      pthread_t pt = -1;
+      struct tc_arg* tca = malloc(sizeof(struct tc_arg));
+      tca->run = malloc(sizeof(_Bool));
+      *tca->run = 1;
+      tca->res = res;
+      tca->fpath = fpath;
+      pthread_t pt; (void)pt;
 
       struct track_chng tc;
-      tc.run = tca.run;
+      tc.run = tca->run;
+      tc.tca = tca;
 
-      pthread_create(&pt, NULL, &track_changes_pth, &tca);
+      pthread_create(&pt, NULL, &track_changes_pth, tca);
       tc.pth = pt;
       return tc;
 }
 
 void untrack_changes(struct track_chng tc){
+      free(tc.tca);
       *tc.run = 0;
       pthread_join(tc.pth, NULL);
+      free(tc.run);
 }
