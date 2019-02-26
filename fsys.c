@@ -6,19 +6,24 @@
 #include <dirent.h>
 #include <pthread.h>
 
+#include "fname_hash.h"
 #include "fsys.h"
+
+struct fname* fn;
 
 void fsys_init(struct fsys* fs){
       fs->n = 0;
       fs->cap = 10;
       fs->files = malloc(sizeof(struct finf)*fs->cap);
+      fn = fname_init(fn, 100);
 }
 
 struct finf finf_build(time_t edit_t, ino_t file_no, char* fname){
       struct finf f;
       f.edit_t = edit_t;
       f.file_no = file_no;
-      strncpy(f.fname, fname, NAME_MAX);
+      // TODO: do i need to strdup?
+      add_file_to_fhash(fn, file_no, fname);
       return f;
 }
 
@@ -78,7 +83,7 @@ struct fsys_cmp_in* fci_init(struct fsys_cmp_in* fci){
       return fci;
 }
 
-void fce_add_inf(struct fsys_cmp_in* fci, char* fname, ino_t key, time_t edit_t, int age){
+void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age){
       int i = key%fci->bux;
       struct fsys_cmp_entry* fce = NULL;
       // if first entry in bucket
@@ -109,7 +114,6 @@ void fce_add_inf(struct fsys_cmp_in* fci, char* fname, ino_t key, time_t edit_t,
       }
       
       fce->next = NULL;
-      strncpy(fce->fname, fname, NAME_MAX);
       fce->key = key;
       fce->edit_t[age] = edit_t;
       if(age == NEW)fce->old = 1;
@@ -126,9 +130,9 @@ struct fsys_cmp_in* build_fci(struct fsys* fs_new, struct fsys* fs_old){
       fci_init(ret);
       // old entries must be added first
       for(int i = 0; i < fs_old->n; ++i)
-            fce_add_inf(ret, fs_old->files[i].fname, fs_old->files[i].file_no, fs_old->files[i].edit_t, OLD);
+            fce_add_inf(ret, fs_old->files[i].file_no, fs_old->files[i].edit_t, OLD);
       for(int i = 0; i < fs_new->n; ++i)
-            fce_add_inf(ret, fs_new->files[i].fname, fs_new->files[i].file_no, fs_new->files[i].edit_t, NEW);
+            fce_add_inf(ret, fs_new->files[i].file_no, fs_new->files[i].edit_t, NEW);
       return ret;
 }
 
@@ -142,7 +146,7 @@ struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_al
             for(struct fsys_cmp_entry* fce = fci->cmp_entries[fci->bucket_ind[i]].first;
                 fce; fce = fce->next){
                   if(fce->alt){
-                        printf("file %s has been altered\n", fce->fname);
+                        printf("file %s has been altered\n", get_fname(fn, fce->key));
                         ++(*n_alt);
                   }
             }

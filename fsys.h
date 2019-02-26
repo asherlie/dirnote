@@ -17,7 +17,7 @@
 #endif
 
 struct finf{
-      char fname[NAME_MAX+1];
+      // char fname[NAME_MAX+1];
       time_t edit_t;
       ino_t file_no;
 };
@@ -56,7 +56,7 @@ struct track_chng{
 
 struct fsys_cmp_entry{
       ino_t key;
-      char fname[NAME_MAX+1];
+      // char fname[NAME_MAX+1];
       // old, new
       time_t edit_t[2];
       // if this file exists in old, new
@@ -75,7 +75,7 @@ struct fsys_cmp_in* fci_init(struct fsys_cmp_in* fci);
 
 // age can be passed OLD or NEW
 // age is recorded as having file key once this is called
-void fce_add_inf(struct fsys_cmp_in* fci, char* fname, ino_t key, time_t edit_t, int age);
+void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age);
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
