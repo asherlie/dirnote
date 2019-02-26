@@ -1,5 +1,8 @@
+#include <dirent.h>
+
 struct fname_entry{
       char* fname;
+      ino_t file_no;
       struct fname_entry* next, * first, * last;
 };
 
@@ -9,6 +12,6 @@ struct fname{
 };
 
 struct fname* fname_init(struct fname* fn, int buckets);
-void add_file_to_fhash(ino_t file_no, char* fname);
+void add_file_to_fhash(struct fname* fn, ino_t file_no, char* fname);
 char* get_fname(struct fname* fn, ino_t file_no);
 void fhash_free(struct fname* fn);
