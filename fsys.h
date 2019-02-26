@@ -17,7 +17,6 @@
 #endif
 
 struct finf{
-      // char fname[NAME_MAX+1];
       time_t edit_t;
       ino_t file_no;
 };
@@ -27,13 +26,9 @@ struct fsys{
       struct finf* files;
 };
 
-// TODO: all fnames should point to the same malloc'd mem for each file_no
-// TODO: write a hashed linked list to find malloc'd strings
-// once this is written, get rid of all fname entries and just look up
-// in table from ino_t when needed
 struct tc_list_node{
       int alt_type;
-      char* fname;
+      ino_t file_no;
       struct tc_list_node* next;
 };
 
@@ -56,7 +51,6 @@ struct track_chng{
 
 struct fsys_cmp_entry{
       ino_t key;
-      // char fname[NAME_MAX+1];
       // old, new
       time_t edit_t[2];
       // if this file exists in old, new
