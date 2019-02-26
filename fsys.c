@@ -18,7 +18,7 @@ struct finf finf_build(time_t edit_t, ino_t file_no, char* fname){
       struct finf f;
       f.edit_t = edit_t;
       f.file_no = file_no;
-      strcpy(f.fname, fname);
+      strncpy(f.fname, fname, NAME_MAX);
       return f;
 }
 
@@ -73,18 +73,12 @@ struct fsys_cmp_in* fci_init(struct fsys_cmp_in* fci){
       for(int i = 0; i < fci->bux; ++i){
             fci->cmp_entries[i].next = fci->cmp_entries[i].first =
             fci->cmp_entries[i].last = NULL;
-            memset(fci->cmp_entries[i].edit_t, 0, sizeof(time_t)*2);
       }
 
       return fci;
 }
 
-void resize_fci(struct fsys_cmp_in* fci, int factor){
-      (void)fci;
-      (void)factor;
-}
-
-void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age){
+void fce_add_inf(struct fsys_cmp_in* fci, char* fname, ino_t key, time_t edit_t, int age){
       int i = key%fci->bux;
       struct fsys_cmp_entry* fce = NULL;
       // if first entry in bucket
@@ -114,6 +108,7 @@ void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age){
       }
       
       fce->next = NULL;
+      strncpy(fce->fname, fname, NAME_MAX);
       fce->key = key;
       fce->edit_t[age] = edit_t;
       if(age == NEW)fce->old = 1;
@@ -130,9 +125,9 @@ struct fsys_cmp_in* build_fci(struct fsys* fs_new, struct fsys* fs_old){
       fci_init(ret);
       // old entries must be added first
       for(int i = 0; i < fs_old->n; ++i)
-            fce_add_inf(ret, fs_old->files[i].file_no, fs_old->files[i].edit_t, OLD);
+            fce_add_inf(ret, fs_old->files[i].fname, fs_old->files[i].file_no, fs_old->files[i].edit_t, OLD);
       for(int i = 0; i < fs_new->n; ++i)
-            fce_add_inf(ret, fs_new->files[i].file_no, fs_new->files[i].edit_t, NEW);
+            fce_add_inf(ret, fs_new->files[i].fname, fs_new->files[i].file_no, fs_new->files[i].edit_t, NEW);
       return ret;
 }
 
@@ -146,7 +141,7 @@ struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_al
             for(struct fsys_cmp_entry* fce = fci->cmp_entries[fci->bucket_ind[i]].first;
                 fce; fce = fce->next){
                   if(fce->alt){
-                        puts("alteration found!");
+                        printf("file %s has been altered\n", fce->fname);
                         ++(*n_alt);
                   }
             }
@@ -159,6 +154,10 @@ struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_al
             fci = NULL;
       }
       return fci;
+}
+
+void fsys_free(struct fsys* fs){
+      free(fs->files);
 }
 
 // resolution is time to sleep between checks in usecs
@@ -180,9 +179,11 @@ void* track_changes_pth(void* tca_v){
                   printf("%i files have been altered\n", diff);
                   // fsys_cmp_free(cmp);
             }
-            // fsys_free(fs_o);
-            // fsys_free(tmp_fs);
+            fsys_free(fs_o);
+            fsys_free(tmp_fs);
       }
+      free(fs_o);
+      free(tmp_fs);
       return NULL;
 }
 

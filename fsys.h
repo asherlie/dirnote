@@ -10,7 +10,7 @@
 #endif
 
 struct finf{
-      char fname[NAME_MAX];
+      char fname[NAME_MAX+1];
       time_t edit_t;
       ino_t file_no;
 };
@@ -39,21 +39,12 @@ struct track_chng{
 
 struct fsys_cmp_entry{
       ino_t key;
+      char fname[NAME_MAX+1];
       // old, new
       time_t edit_t[2];
       // if this file exists in old, new
       _Bool old, new, alt;
       struct fsys_cmp_entry* first, * last, * next;
-};
-
-struct f_ind{
-      int ind;
-      struct f_ind* next;
-};
-
-struct f_indices{
-      struct f_ind* first;
-      struct f_ind* last;
 };
 
 struct fsys_cmp_in{
@@ -70,7 +61,7 @@ struct fsys_cmp_in* fci_init(struct fsys_cmp_in* fci);
 // age can be passed OLD or NEW
 //
 // age is recorded as having file key once this is called
-void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age);
+void fce_add_inf(struct fsys_cmp_in* fci, char* fname, ino_t key, time_t edit_t, int age);
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
@@ -81,8 +72,8 @@ struct fsys* fsys_build(struct fsys* fs, char* fpath);
 struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_alt);
 void fsys_merge(struct fsys* fs_dest, struct fsys* fs_src);
 
+void fsys_free(struct fsys* fs);
 /* track_changes should not be called without pthread_create */
 // returns a pointer to _Bool run in tc_arg
-// struct track_chng track_changes(char* fpath, int res);
 struct track_chng track_changes(char* fpath, int res);
 void untrack_changes(struct track_chng tc);
