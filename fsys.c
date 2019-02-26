@@ -68,7 +68,7 @@ struct fsys_cmp_in* fci_init(struct fsys_cmp_in* fci){
       // TODO: free this
       fci->bucket_ind = malloc((fci->bux+1)*sizeof(int));
       // TODO: is this UB? man memset says `c` should be a byte
-      memset(fci->bucket_ind, -1, sizeof(int)*fci->bux);
+      memset(fci->bucket_ind, -1, sizeof(int)*(fci->bux+1));
       fci->cmp_entries = calloc(sizeof(struct fsys_cmp_entry), fci->bux);
       for(int i = 0; i < fci->bux; ++i){
             fci->cmp_entries[i].next = fci->cmp_entries[i].first =
@@ -83,6 +83,7 @@ void fce_add_inf(struct fsys_cmp_in* fci, char* fname, ino_t key, time_t edit_t,
       struct fsys_cmp_entry* fce = NULL;
       // if first entry in bucket
       if(!fci->cmp_entries[i].first && !fci->cmp_entries[i].last && !fci->cmp_entries[i].next){
+            // TODO: fci->n is 2n
             fci->bucket_ind[fci->n] = i;
             fci->cmp_entries[i].first = malloc(sizeof(struct fsys_cmp_entry));
             fci->cmp_entries[i].last = fci->cmp_entries[i].first;

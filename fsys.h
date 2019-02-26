@@ -2,8 +2,15 @@
 #include <dirent.h>
 #include <pthread.h>
 
+#include "fname_hash.h"
+
 #define OLD 0
 #define NEW 1
+
+// creation, deletion, change
+#define ALT_CRE 0
+#define ALT_DEL 1
+#define ALT_CHA 2
 
 #ifndef NAME_MAX
 #define NAME_MAX 255
@@ -20,12 +27,22 @@ struct fsys{
       struct finf* files;
 };
 
+// TODO: all fnames should point to the same malloc'd mem for each file_no
+// TODO: write a hashed linked list to find malloc'd strings
+// once this is written, get rid of all fname entries and just look up
+// in table from ino_t when needed
+struct tc_list_node{
+      int alt_type;
+      char* fname;
+      struct tc_list_node* next;
+};
+
 /* this is an argument struct for track_changes */
 
 struct tc_arg{
       char* fpath;
       int res;
-      // once run == 0, tc will safely exit
+      // once *run == 0, tc will safely exit
       _Bool* run;
 };
 
@@ -48,18 +65,15 @@ struct fsys_cmp_entry{
 };
 
 struct fsys_cmp_in{
-      int n, cap;
-
       // hashed `ino_t`s point to linked lists of cmp_entries
       // bucket_ind stores all the populated bucket indices
-      int bux, * bucket_ind;
+      int n, bux, * bucket_ind;
       struct fsys_cmp_entry* cmp_entries;
 };
 
 struct fsys_cmp_in* fci_init(struct fsys_cmp_in* fci);
 
 // age can be passed OLD or NEW
-//
 // age is recorded as having file key once this is called
 void fce_add_inf(struct fsys_cmp_in* fci, char* fname, ino_t key, time_t edit_t, int age);
 
