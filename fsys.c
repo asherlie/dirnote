@@ -22,8 +22,7 @@ struct finf finf_build(time_t edit_t, ino_t file_no, char* fname){
       struct finf f;
       f.edit_t = edit_t;
       f.file_no = file_no;
-      // TODO: do i need to strdup?
-      add_file_to_fhash(fn, file_no, fname);
+      add_file_to_fhash(fn, file_no, strndup(fname, NAME_MAX));
       return f;
 }
 

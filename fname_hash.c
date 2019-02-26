@@ -33,7 +33,6 @@ void add_file_to_fhash(struct fname* fn, ino_t file_no, char* fname){
 
 char* get_fname(struct fname* fn, ino_t file_no){
       int ind = file_no%fn->bux;
-      if(!fn->filenames[ind] || !fn->filenames[ind]->first)return NULL;
       for(struct fname_entry* fe = fn->filenames[ind]->first; fe; fe = fe->next){
             if(fe->file_no == file_no)return fe->fname;
       }
