@@ -15,7 +15,6 @@ void fsys_init(struct fsys* fs){
       fs->n = 0;
       fs->cap = 10;
       fs->files = malloc(sizeof(struct finf)*fs->cap);
-      fn = fname_init(fn, 100);
 }
 
 struct finf finf_build(time_t edit_t, ino_t file_no, char* fname){
@@ -188,10 +187,12 @@ void* track_changes_pth(void* tca_v){
       }
       free(fs_o);
       free(tmp_fs);
+      fhash_free(fn);
       return NULL;
 }
 
 struct track_chng track_changes(char* fpath, int res){
+      fn = fname_init(fn, 100);
       struct tc_arg* tca = malloc(sizeof(struct tc_arg));
       tca->run = malloc(sizeof(_Bool));
       *tca->run = 1;
@@ -202,6 +203,7 @@ struct track_chng track_changes(char* fpath, int res){
       struct track_chng tc;
       tc.run = tca->run;
       tc.tca = tca;
+      tc.fname_hash = fn;
 
       pthread_create(&pt, NULL, &track_changes_pth, tca);
       tc.pth = pt;

@@ -47,6 +47,8 @@ struct track_chng{
       pthread_t pth;
 
       struct tc_arg* tca;
+
+      struct fname* fname_hash;
 };
 
 struct fsys_cmp_entry{
