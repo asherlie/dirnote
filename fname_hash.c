@@ -25,6 +25,7 @@ void add_file_to_fhash(struct fname* fn, ino_t file_no, char* fname){
       else{
             if(get_fname(fn, file_no))return;
             cur = fn->filenames[ind]->last->next = malloc(sizeof(struct fname_entry));
+            fn->filenames[ind]->last = cur;
       }
       cur->next = NULL;
       cur->fname = fname;
@@ -33,9 +34,8 @@ void add_file_to_fhash(struct fname* fn, ino_t file_no, char* fname){
 
 char* get_fname(struct fname* fn, ino_t file_no){
       int ind = file_no%fn->bux;
-      for(struct fname_entry* fe = fn->filenames[ind]->first; fe; fe = fe->next){
+      for(struct fname_entry* fe = fn->filenames[ind]->first; fe; fe = fe->next)
             if(fe->file_no == file_no)return fe->fname;
-      }
       return NULL;
 }
 
