@@ -35,10 +35,14 @@ struct tc_list_node{
 /* this is an argument struct for track_changes */
 
 struct tc_arg{
+      // this locks operations on track_chng.alt_queue
+      pthread_mutex_t tc_list_mut;
       char* fpath;
       int res;
       // once *run == 0, tc will safely exit
       _Bool* run;
+
+      struct tc_list_node* alt_queue;
 };
 
 // TODO: this struct is obsolete

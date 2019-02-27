@@ -215,4 +215,5 @@ void untrack_changes(struct track_chng tc){
       *tc.run = 0;
       pthread_join(tc.pth, NULL);
       free(tc.run);
+      // fhash_free(tc.fname_hash);
 }
