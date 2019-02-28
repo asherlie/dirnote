@@ -82,6 +82,7 @@ struct fsys* fsys_build(struct fsys* fs, char* fpath);
 struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, struct tc_stack* tcs);
 void fsys_merge(struct fsys* fs_dest, struct fsys* fs_src);
 
+void fsys_cmp_free(struct fsys_cmp_in* fci);
 void fsys_free(struct fsys* fs);
 /* track_changes should not be called without pthread_create */
 // returns a pointer to _Bool run in tc_arg

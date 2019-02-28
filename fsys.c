@@ -143,6 +143,20 @@ struct fsys_cmp_in* build_fci(struct fsys* fs_new, struct fsys* fs_old){
       return ret;
 }
 
+void fsys_cmp_free(struct fsys_cmp_in* fci){
+      for(int i = 0; fci->bucket_ind[i] != -1; ++i){
+            struct fsys_cmp_entry* prev = NULL;
+            for(struct fsys_cmp_entry* fce = fci->cmp_entries[i].first; fce; fce = fce->next){
+                  if(prev)free(prev);
+                  prev = fce;
+            }
+            free(prev);
+      }
+      free(fci->cmp_entries);
+      // TODO: why does this next line seg fault?
+      // free(fci->bucket_ind);
+}
+
 // returns a malloc'd struct fsys_cmp_in*
 // returns NULL if no change detected
 // TODO: fsys_cmp should possibly take in tc_stack*
@@ -164,7 +178,7 @@ struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, struct tc
       // TODO: fci->n is twice what it should be
       // if(!fci->n || !*n_alt){
       if(!fci->n || !tcs->n){
-            free(fci->cmp_entries);
+            fsys_cmp_free(fci);
             free(fci);
             fci = NULL;
       }
@@ -192,15 +206,15 @@ void* track_changes_pth(void* tca_v){
             // should fsys_cmp take an int* for alt_type
             // if((cmp = fsys_cmp(fs_o, tmp_fs, &diff))){
             if((cmp = fsys_cmp(fs_o, tmp_fs, tca->tc_stack))){
-                  printf("%i files have been altered\n", tca->tc_stack->n);
-                  // fsys_cmp_free(cmp);
+                  // free cmp instantly - waste of mallocs...
+                  fsys_cmp_free(cmp);
+                  free(cmp);
             }
             fsys_free(fs_o);
             fsys_free(tmp_fs);
       }
       free(fs_o);
       free(tmp_fs);
-      fhash_free(fn);
       return NULL;
 }
 
@@ -238,5 +252,5 @@ void untrack_changes(struct track_chng tc){
       *tc.run = 0;
       pthread_join(tc.pth, NULL);
       free(tc.run);
-      // fhash_free(tc.fname_hash);
+      fhash_free(fn);
 }
