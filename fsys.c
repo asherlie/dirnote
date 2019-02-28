@@ -183,7 +183,6 @@ void* track_changes_pth(void* tca_v){
       struct fsys* tmp_fs = malloc(sizeof(struct fsys));
 
       struct fsys_cmp_in* cmp;
-      int diff;
 
       while(*tca->run){
             fsys_build(fs_o, tca->fpath);
@@ -191,8 +190,9 @@ void* track_changes_pth(void* tca_v){
             fsys_build(tmp_fs, tca->fpath);
 
             // should fsys_cmp take an int* for alt_type
-            if((cmp = fsys_cmp(fs_o, tmp_fs, &diff))){
-                  printf("%i files have been altered\n", diff);
+            // if((cmp = fsys_cmp(fs_o, tmp_fs, &diff))){
+            if((cmp = fsys_cmp(fs_o, tmp_fs, tca->tc_stack))){
+                  printf("%i files have been altered\n", tca->tc_stack->n);
                   // fsys_cmp_free(cmp);
             }
             fsys_free(fs_o);

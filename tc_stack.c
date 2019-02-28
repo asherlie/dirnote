@@ -29,10 +29,12 @@ void tc_stack_push(struct tc_stack* tcs, ino_t file_no, int alt_type){
 }
 
 struct tc_stack_entry* tc_stack_pop(struct tc_stack* tcs){
+      pthread_mutex_lock(&tcs->tc_stack_mut);
       struct tc_stack_entry* ret = tcs->top;
       if(!ret)return NULL;
       tcs->top = ret->prev;
       tcs->top->next = NULL;
+      pthread_mutex_unlock(&tcs->tc_stack_mut);
       return ret;
 }
 
