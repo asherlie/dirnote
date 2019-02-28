@@ -168,10 +168,7 @@ struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, struct tc
       for(int i = 0; fci->bucket_ind[i] != -1; ++i){
             for(struct fsys_cmp_entry* fce = fci->cmp_entries[fci->bucket_ind[i]].first;
                 fce; fce = fce->next){
-                  if(fce->alt){
-                        tc_stack_push(tcs, fce->key, fce->alt_type);
-                        printf("file %s has been altered\n", get_fname(fn, fce->key));
-                  }
+                  if(fce->alt)tc_stack_push(tcs, fce->key, fce->alt_type);
             }
       }
 
