@@ -78,7 +78,8 @@ struct fsys* fsys_build(struct fsys* fs, char* fpath);
 //struct finf** fsys_cmp(struct fsys* fs0, struct fsys* fs1, int* ret_sz);
 // returns a malloc'd struct fsys_cmp_in*
 // returns NULL if no change detected
-struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_alt);
+// struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_alt);
+struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, struct tc_stack* tcs);
 void fsys_merge(struct fsys* fs_dest, struct fsys* fs_src);
 
 void fsys_free(struct fsys* fs);

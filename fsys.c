@@ -147,9 +147,9 @@ struct fsys_cmp_in* build_fci(struct fsys* fs_new, struct fsys* fs_old){
 // returns NULL if no change detected
 // TODO: fsys_cmp should possibly take in tc_stack*
 // struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_alt){
+// tc_stack should be initialized
 struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, struct tc_stack* tcs){
       struct fsys_cmp_in* fci = build_fci(fs_new, fs_old);
-      *n_alt = 0;
 
       for(int i = 0; fci->bucket_ind[i] != -1; ++i){
             for(struct fsys_cmp_entry* fce = fci->cmp_entries[fci->bucket_ind[i]].first;
@@ -157,13 +157,13 @@ struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, struct tc
                   if(fce->alt){
                         tc_stack_push(tcs, fce->key, fce->alt_type);
                         printf("file %s has been altered\n", get_fname(fn, fce->key));
-                        ++(*n_alt);
                   }
             }
       }
 
       // TODO: fci->n is twice what it should be
-      if(!fci->n || !*n_alt){
+      // if(!fci->n || !*n_alt){
+      if(!fci->n || !tcs->n){
             free(fci->cmp_entries);
             free(fci);
             fci = NULL;

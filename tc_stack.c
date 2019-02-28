@@ -24,6 +24,7 @@ void tc_stack_push(struct tc_stack* tcs, ino_t file_no, int alt_type){
       cur->file_no = file_no;
       cur->alt_type = alt_type;
       cur->next = NULL;
+      ++tcs->n;
       pthread_mutex_unlock(&tcs->tc_stack_mut);
 }
 
