@@ -25,34 +25,28 @@ struct fsys{
       int n, cap;
       struct finf* files;
 };
-
-struct tc_list_node{
-      int alt_type;
-      ino_t file_no;
-      struct tc_list_node* next;
-};
-
 /* this is an argument struct for track_changes */
 
 struct tc_arg{
-      // this locks operations on track_chng.alt_queue
-      pthread_mutex_t tc_list_mut;
       char* fpath;
       int res;
       // once *run == 0, tc will safely exit
       _Bool* run;
 
-      struct tc_list_node* alt_queue;
+      struct tc_stack* tc_stack;
 };
 
 // TODO: this struct is obsolete
 struct track_chng{
       _Bool* run;
-      pthread_t pth;
 
       struct tc_arg* tca;
 
       struct fname* fname_hash;
+
+      pthread_t pth;
+      // this is a pointer to the tc_stack in tc_arg for ease of use
+      struct tc_stack* tc_stack;
 };
 
 struct fsys_cmp_entry{
@@ -61,6 +55,7 @@ struct fsys_cmp_entry{
       time_t edit_t[2];
       // if this file exists in old, new
       _Bool old, new, alt;
+      int alt_type;
       struct fsys_cmp_entry* first, * last, * next;
 };
 

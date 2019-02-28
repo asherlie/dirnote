@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <pthread.h>
 
+#include "tc_stack.h"
 #include "fname_hash.h"
 #include "fsys.h"
 
@@ -117,6 +118,14 @@ void fce_add_inf(struct fsys_cmp_in* fci, ino_t key, time_t edit_t, int age){
       if(age == NEW)fce->old = 1;
       else fce->new = 1;
       fce->alt = (fce->old ^ fce->new) || (fce->old && fce->new && fce->edit_t[0] != fce->edit_t[1]);
+      if(fce->alt){
+            if(fce->old && fce->new)fce->alt_type = ALT_CHA;
+            else{
+                  if(fce->old && !fce->new)fce->alt_type = ALT_DEL;
+                  else fce->alt_type = ALT_CRE;
+            }
+
+      }
       ++fci->n;
 
       return;
@@ -136,7 +145,9 @@ struct fsys_cmp_in* build_fci(struct fsys* fs_new, struct fsys* fs_old){
 
 // returns a malloc'd struct fsys_cmp_in*
 // returns NULL if no change detected
-struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_alt){
+// TODO: fsys_cmp should possibly take in tc_stack*
+// struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_alt){
+struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, struct tc_stack* tcs){
       struct fsys_cmp_in* fci = build_fci(fs_new, fs_old);
       *n_alt = 0;
 
@@ -144,6 +155,7 @@ struct fsys_cmp_in* fsys_cmp(struct fsys* fs_new, struct fsys* fs_old, int* n_al
             for(struct fsys_cmp_entry* fce = fci->cmp_entries[fci->bucket_ind[i]].first;
                 fce; fce = fce->next){
                   if(fce->alt){
+                        tc_stack_push(tcs, fce->key, fce->alt_type);
                         printf("file %s has been altered\n", get_fname(fn, fce->key));
                         ++(*n_alt);
                   }
@@ -178,6 +190,7 @@ void* track_changes_pth(void* tca_v){
             usleep(tca->res);
             fsys_build(tmp_fs, tca->fpath);
 
+            // should fsys_cmp take an int* for alt_type
             if((cmp = fsys_cmp(fs_o, tmp_fs, &diff))){
                   printf("%i files have been altered\n", diff);
                   // fsys_cmp_free(cmp);
@@ -191,6 +204,7 @@ void* track_changes_pth(void* tca_v){
       return NULL;
 }
 
+
 struct track_chng track_changes(char* fpath, int res){
       fn = fname_init(fn, 100);
       struct tc_arg* tca = malloc(sizeof(struct tc_arg));
@@ -200,10 +214,16 @@ struct track_chng track_changes(char* fpath, int res){
       tca->fpath = fpath;
       pthread_t pt; (void)pt;
 
+      tca->tc_stack = tc_stack_init(NULL);
+      pthread_mutex_init(&tca->tc_stack->tc_stack_mut, NULL);
+
       struct track_chng tc;
       tc.run = tca->run;
       tc.tca = tca;
       tc.fname_hash = fn;
+
+      tc.tc_stack = tc_stack_init(NULL);
+      tc.tc_stack = tca->tc_stack;
 
       pthread_create(&pt, NULL, &track_changes_pth, tca);
       tc.pth = pt;
@@ -211,6 +231,9 @@ struct track_chng track_changes(char* fpath, int res){
 }
 
 void untrack_changes(struct track_chng tc){
+      pthread_mutex_destroy(&tc.tc_stack->tc_stack_mut);
+      tc_stack_free(tc.tc_stack);
+      free(tc.tc_stack);
       free(tc.tca);
       *tc.run = 0;
       pthread_join(tc.pth, NULL);
